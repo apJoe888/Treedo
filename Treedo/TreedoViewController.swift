@@ -10,10 +10,21 @@ import UIKit
 
 class TreedoViewController: UITableViewController {
 
-    var itemArray = ["Item 1", "Item 2", "Item 3"]
+  
+    
+    let defaults = UserDefaults.standard
+    
+    var itemArray : [String] = [String]()
+   
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        if let joe = defaults.value(forKey: "ToDo")
+        {
+            itemArray = joe as! [String]
+        }
+      
+        
     }
 
     // MARK: Tableview Datasource Methods
@@ -52,6 +63,7 @@ class TreedoViewController: UITableViewController {
         }
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             self.itemArray.append(textField.text!)
+            self.defaults.set(self.itemArray, forKey: "ToDo")
             self.tableView.reloadData()
         }
         alert.addAction(action)
