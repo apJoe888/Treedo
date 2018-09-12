@@ -10,7 +10,7 @@ import UIKit
 
 class TreedoViewController: UITableViewController {
 
-    let itemArray = ["Item 1", "Item 2", "Item 3"]
+    var itemArray = ["Item 1", "Item 2", "Item 3"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,6 +43,20 @@ class TreedoViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 
-
+    @IBAction func addButtonPress(_ sender: UIBarButtonItem) {
+        var textField = UITextField()
+        let alert = UIAlertController(title: "Add new item", message: "", preferredStyle: .alert)
+        alert.addTextField { (alertTF) in
+            alertTF.placeholder = "Create new item"
+            textField = alertTF
+        }
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            self.itemArray.append(textField.text!)
+            self.tableView.reloadData()
+        }
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+    }
+    
 }
 

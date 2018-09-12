@@ -32,7 +32,14 @@
                             <outlet property="delegate" destination="Lry-yM-6Pi" id="gdY-fg-kQn"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Treedo" id="akF-0S-05e"/>
+                    <navigationItem key="navigationItem" title="Treedo" id="akF-0S-05e">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="riO-a3-41m">
+                            <color key="tintColor" red="0.99999600649999998" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <connections>
+                                <action selector="addButtonPress:" destination="Lry-yM-6Pi" id="lES-BD-299"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Agx-Ox-qXc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
