@@ -14,14 +14,14 @@ class TreedoViewController: UITableViewController {
     
     let defaults = UserDefaults.standard
     
-    var itemArray : [String] = [String]()
+    var itemArray : [ToDoItem] = [ToDoItem]()
    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let joe = defaults.value(forKey: "ToDo")
+        if let joe = defaults.array(forKey: "ToDo1")
         {
-            itemArray = joe as! [String]
+            itemArray = joe as! [ToDoItem]
         }
       
         
@@ -35,7 +35,8 @@ class TreedoViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell")
-        cell?.textLabel?.text = itemArray[indexPath.row]
+        cell?.textLabel?.text = itemArray[indexPath.row].taskName
+        cell?.accessoryType = (itemArray[indexPath.row].isComplete ? .checkmark : .none)
         return cell!
     }
     
@@ -43,15 +44,12 @@ class TreedoViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedCell = tableView.cellForRow(at: indexPath)
-        if(selectedCell?.accessoryType == .checkmark)
-        {
-            selectedCell?.accessoryType = .none
-        }
-        else
-        {
-            selectedCell?.accessoryType = .checkmark
-        }
+        
+        itemArray[indexPath.row].isComplete = !itemArray[indexPath.row].isComplete
+        
+        
         tableView.deselectRow(at: indexPath, animated: true)
+        self.tableView.reloadData()
     }
 
     @IBAction func addButtonPress(_ sender: UIBarButtonItem) {
@@ -62,8 +60,10 @@ class TreedoViewController: UITableViewController {
             textField = alertTF
         }
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            self.itemArray.append(textField.text!)
-            self.defaults.set(self.itemArray, forKey: "ToDo")
+            let newToDo = ToDoItem()
+            newToDo.taskName = textField.text!
+            self.itemArray.append(newToDo)
+            self.defaults.set(self.itemArray, forKey: "ToDo1")
             self.tableView.reloadData()
         }
         alert.addAction(action)
