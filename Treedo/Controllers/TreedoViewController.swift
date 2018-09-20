@@ -10,20 +10,26 @@ import UIKit
 
 class TreedoViewController: UITableViewController {
 
-  
     
-    let defaults = UserDefaults.standard
-    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var itemArray : [ToDoItem] = [ToDoItem]()
    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let joe = defaults.array(forKey: "ToDo1")
-        {
-            itemArray = joe as! [ToDoItem]
-        }
+        
       
+        let jc1 = PropertyListDecoder()
+        do {
+            
+            let data = try Data(contentsOf: dataFilePath!)
+            itemArray = try jc1.decode([ToDoItem].self, from: data)
+     
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+        
+        
+        
         
     }
 
@@ -43,15 +49,28 @@ class TreedoViewController: UITableViewController {
     // MARK: Tableview Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedCell = tableView.cellForRow(at: indexPath)
         
         itemArray[indexPath.row].isComplete = !itemArray[indexPath.row].isComplete
-        
+        self.saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
         self.tableView.reloadData()
     }
 
+    
+    func saveItems()
+    {
+        let jc = PropertyListEncoder()
+        do {
+            let data = try jc.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+       
+    }
+    
+    
     @IBAction func addButtonPress(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let alert = UIAlertController(title: "Add new item", message: "", preferredStyle: .alert)
@@ -63,7 +82,10 @@ class TreedoViewController: UITableViewController {
             let newToDo = ToDoItem()
             newToDo.taskName = textField.text!
             self.itemArray.append(newToDo)
-            self.defaults.set(self.itemArray, forKey: "ToDo1")
+            
+          
+            self.saveItems()
+            
             self.tableView.reloadData()
         }
         alert.addAction(action)
