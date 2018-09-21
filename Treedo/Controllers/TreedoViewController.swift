@@ -7,28 +7,49 @@
 //
 
 import UIKit
+import CoreData
 
 class TreedoViewController: UITableViewController {
 
     
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    //let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var itemArray : [ToDoItem] = [ToDoItem]()
    
+    var selectedCat : Category? {
+        didSet{
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            
+            let request : NSFetchRequest<ToDoItem> = ToDoItem.fetchRequest()
+            
+            let pred = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCat!.name!)
+            request.predicate = pred
+            
+            do {
+                itemArray = try context.fetch(request)
+            } catch {
+                print("whoops! \(error)")
+            }
+            
+            
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
       
-        let jc1 = PropertyListDecoder()
-        do {
+      //  let jc1 = PropertyListDecoder()
+      //  do {
             
-            let data = try Data(contentsOf: dataFilePath!)
-            itemArray = try jc1.decode([ToDoItem].self, from: data)
+        //    let data = try Data(contentsOf: dataFilePath!)
+          //  itemArray = try jc1.decode([ToDoItem].self, from: data)
      
-        } catch {
-            print("Error encoding item array, \(error)")
-        }
+      //  } catch {
+        //    print("Error encoding item array, \(error)")
+       // }
         
         
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         
     }
@@ -51,6 +72,12 @@ class TreedoViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         itemArray[indexPath.row].isComplete = !itemArray[indexPath.row].isComplete
+        
+        
+        //let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        //context.delete(itemArray[indexPath.row])
+        //itemArray.remove(at: indexPath.row)
+        
         self.saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
@@ -60,12 +87,17 @@ class TreedoViewController: UITableViewController {
     
     func saveItems()
     {
-        let jc = PropertyListEncoder()
+        //let jc = PropertyListEncoder()
         do {
-            let data = try jc.encode(itemArray)
-            try data.write(to: dataFilePath!)
+           // let data = try jc.encode(itemArray)
+           // try data.write(to: dataFilePath!)
+            
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            try context.save()
+            
+            
         } catch {
-            print("Error encoding item array, \(error)")
+            print("Error saving context, \(error)")
         }
        
     }
@@ -79,8 +111,13 @@ class TreedoViewController: UITableViewController {
             textField = alertTF
         }
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            let newToDo = ToDoItem()
+            
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            
+            let newToDo = ToDoItem(context: context)
             newToDo.taskName = textField.text!
+            newToDo.parentCategory = self.selectedCat
+            newToDo.isComplete = false
             self.itemArray.append(newToDo)
             
           
@@ -92,5 +129,75 @@ class TreedoViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+ 
+    
+    
 }
 
+extension TreedoViewController: UISearchBarDelegate
+{
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let req : NSFetchRequest<ToDoItem> = ToDoItem.fetchRequest()
+        
+        let pred = NSPredicate(format: "taskName CONTAINS[cd] %@", searchBar.text!)
+         let pred2 = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCat!.name!)
+        
+        let aP = NSCompoundPredicate(andPredicateWithSubpredicates: [pred, pred2])
+        
+        
+        /*
+         verstationKeyPredicate = NSPredicate(format: "conversationKey = %@", conversationKey)
+         let messageKeyPredicate = NSPredicate(format: "messageKey = %@", messageKey)
+         let andPredicate = NSCompoundPredicate(type: NSCompoundPredicateType.AndPredicateType, subpredicates: [converstationKeyPredicate, messageKeyPredicate])
+         request.predicate = andPredicate
+        */
+        
+        
+        
+        req.predicate = aP
+       
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+        let sort = NSSortDescriptor(key: "taskName", ascending: true)
+        req.sortDescriptors = [sort]
+        
+        
+        do {
+        itemArray = try context.fetch(req)
+        }
+        catch
+        {
+            print("error: \(error)")
+        }
+        tableView.reloadData()
+        
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if (searchBar.text!.count < 1)
+        {
+            print("yes")
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            
+            let request : NSFetchRequest<ToDoItem> = ToDoItem.fetchRequest()
+            
+            do {
+                itemArray = try context.fetch(request)
+            } catch {
+                print("whoops! \(error)")
+            }
+            tableView.reloadData()
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+            
+        }
+        else
+        {
+            print("no")
+        }
+        
+    }
+  
+    
+}
